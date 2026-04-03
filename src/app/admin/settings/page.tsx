@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
+export const dynamic = "force-dynamic";
+
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);

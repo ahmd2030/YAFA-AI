@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Sparkles, Image as ImageIcon, Zap, TrendingUp, Users, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminDashboard() {
   const stats = [
     { name: "Total Generations", value: "1,280", icon: <ImageIcon className="w-5 h-5" />, color: "text-blue-500" },
