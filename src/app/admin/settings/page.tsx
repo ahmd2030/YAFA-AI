@@ -18,6 +18,11 @@ export default function SettingsPage() {
   // Load existing settings
   useEffect(() => {
     async function fetchSettings() {
+      if (!db) {
+        console.error("Firebase DB not initialized. Check your environment variables.");
+        setDbStatus("error");
+        return;
+      }
       try {
         const docRef = doc(db, "configs", "api-keys");
         const docSnap = await getDoc(docRef);
@@ -35,6 +40,11 @@ export default function SettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!db) {
+      alert("Firebase is not initialized. Please add your Firebase environment variables to Vercel.");
+      setSaveStatus("error");
+      return;
+    }
     setSaveStatus("saving");
     try {
       await setDoc(doc(db, "configs", "api-keys"), {
@@ -43,8 +53,14 @@ export default function SettingsPage() {
       });
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save error:", err);
+      // More descriptive error for common Firestore issues
+      if (err.code === "permission-denied") {
+        alert("Firestore Permission Denied: Please check your Security Rules in the Firebase console.");
+      } else {
+        alert(`Error saving: ${err.message || "Unknown error"}`);
+      }
       setSaveStatus("error");
     }
   };
