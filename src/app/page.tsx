@@ -35,11 +35,19 @@ import {
   Accessory
 } from "@/lib/prompt-engine";
 
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
+
 type Step = "hero" | "upload" | "generating" | "results";
 
 export default function Home() {
   const [step, setStep] = useState<Step>("hero");
   const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imgUrl, setImgUrl] = useState<string>("");
+  const [results, setResults] = useState<string[]>([]);
+  const [usedModel, setUsedModel] = useState("");
+  const [error, setError] = useState<string | null>(null);
   
   // Prompt States
   const [params, setParams] = useState<PromptParams>(DEFAULT_PROMPT_PARAMS);
@@ -54,16 +62,67 @@ export default function Home() {
     setParams(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleGenerate = () => {
-    const prompt = generatePrompt(params);
-    setGeneratedPrompt(prompt);
-    setStep("generating");
-    
-    // Simulate generation time
-    setTimeout(() => {
+  const uploadFile = async (selectedFile: File): Promise<string> => {
+    if (!storage) throw new Error("Storage not initialized");
+    const storageRef = ref(storage, `uploads/${Date.now()}_${selectedFile.name}`);
+    await uploadBytes(storageRef, selectedFile);
+    return await getDownloadURL(storageRef);
+  };
+
+  const handleGenerate = async () => {
+    try {
+      setError(null);
+      const prompt = generatePrompt(params);
+      setGeneratedPrompt(prompt);
+      setStep("generating");
+
+      let currentImgUrl = imgUrl;
+
+      // 1. Upload if needed
+      if (file && !currentImgUrl) {
+        setIsUploading(true);
+        try {
+          currentImgUrl = await uploadFile(file);
+          setImgUrl(currentImgUrl);
+        } catch (err: any) {
+          console.error("Upload error:", err);
+          throw new Error("Failed to upload image. Please check your connection.");
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
+      if (!currentImgUrl) {
+        throw new Error("Please upload an image first.");
+      }
+
+      // 2. Call Generation API
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt,
+          image: currentImgUrl,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Generation failed");
+      }
+
+      // 3. Set Results
+      setResults(data.results || []);
+      setUsedModel(data.model || "AI Studio");
       setStep("results");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 6000);
+
+    } catch (err: any) {
+      console.error("Generation error:", err);
+      setError(err.message);
+      setStep("upload"); // Go back to allow retry
+    }
   };
 
   const handleSmartAuto = () => {
@@ -74,6 +133,9 @@ export default function Home() {
   const handleReset = () => {
     setStep("upload");
     setFile(null);
+    setImgUrl("");
+    setResults([]);
+    setError(null);
   };
 
   return (
@@ -149,7 +211,19 @@ export default function Home() {
                                 <p className="text-sm text-muted">Upload a clear photo of your clothing item.</p>
                             </div>
                           </div>
-                          <UploadBox onUpload={setFile} />
+                          
+                          {error && (
+                            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3">
+                              <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                              {error}
+                            </div>
+                          )}
+
+                          <UploadBox onUpload={(f) => {
+                            setFile(f);
+                            setImgUrl("");
+                            setError(null);
+                          }} />
                         </section>
 
                         {/* Step 2: Customization */}
@@ -273,7 +347,12 @@ export default function Home() {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        <ResultGrid onRegenerate={handleReset} prompt={generatedPrompt} />
+                        <ResultGrid 
+                          results={results} 
+                          modelName={usedModel} 
+                          prompt={generatedPrompt}
+                          onRegenerate={handleReset} 
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>

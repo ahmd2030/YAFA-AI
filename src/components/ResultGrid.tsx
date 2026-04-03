@@ -13,9 +13,11 @@ const mockResults = [
 interface ResultGridProps {
   onRegenerate: () => void;
   prompt?: string;
+  results?: string[];
+  modelName?: string;
 }
 
-export function ResultGrid({ onRegenerate, prompt }: ResultGridProps) {
+export function ResultGrid({ onRegenerate, prompt, results = [], modelName }: ResultGridProps) {
   const [copied, setCopied] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
@@ -26,6 +28,18 @@ export function ResultGrid({ onRegenerate, prompt }: ResultGridProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const displayResults = results.length > 0 ? results : [];
+
+  if (results.length === 0) {
+    return (
+      <div className="text-center py-20 px-8 rounded-3xl bg-surface border border-white/5">
+        <h3 className="text-xl font-bold text-white mb-2">No results to display</h3>
+        <p className="text-muted mb-6">Generated images will appear here.</p>
+        <Button onClick={onRegenerate}>Start Generating</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
@@ -33,7 +47,11 @@ export function ResultGrid({ onRegenerate, prompt }: ResultGridProps) {
           <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
             Your results are ready <span className="animate-bounce">🔥</span>
           </h2>
-          <p className="text-muted">Generated with AI Studio Pro • 4 Variations</p>
+          <div className="flex items-center gap-2">
+            <p className="text-muted">Generated with {modelName || "AI Studio Pro"}</p>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <p className="text-primary font-medium">{results.length} Variations</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={onRegenerate} className="gap-2">
@@ -92,7 +110,7 @@ export function ResultGrid({ onRegenerate, prompt }: ResultGridProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mockResults.map((url, idx) => (
+        {displayResults.map((url, idx) => (
           <motion.div
             key={idx}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -106,7 +124,7 @@ export function ResultGrid({ onRegenerate, prompt }: ResultGridProps) {
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             
-            {/* Overlay */}
+            {/* Overlay ... remains same ... */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-8 text-center backdrop-blur-[2px]">
                <div className="p-3 rounded-full bg-primary/20 border border-primary/50 text-primary mb-4">
                   <CheckCircle2 className="w-10 h-10" />
