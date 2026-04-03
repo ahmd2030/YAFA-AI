@@ -15,13 +15,14 @@ export function Navbar() {
         </div>
         
         <div className="hidden items-center gap-8 md:flex">
+          <Link href="/admin" className="text-sm font-medium text-primary hover:text-white transition-colors">Admin Panel</Link>
           <Link href="#" className="text-sm font-medium text-muted transition-colors hover:text-white">Features</Link>
           <Link href="#" className="text-sm font-medium text-muted transition-colors hover:text-white">Pricing</Link>
           <Link href="#" className="text-sm font-medium text-muted transition-colors hover:text-white">Showcase</Link>
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="hidden md:flex">Sign In</Button>
+          <Button variant="ghost" size="sm">Sign In</Button>
           <Button size="sm">Get Started</Button>
         </div>
       </div>
