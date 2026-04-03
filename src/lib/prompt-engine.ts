@@ -83,6 +83,9 @@ export function generatePrompt(params: PromptParams): string {
   // Clothing check: use the descriptive mapping
   const clothingText = CLOTHING_MAP[clothing];
 
+  const backgroundText = BACKGROUND_MAP[background];
+  const poseText = POSE_MAP[pose];
+
   const basePrompt = `${styleText} of a ${modelText} wearing ${clothingText}, ${lightingText}, ${backgroundText}, ${poseText}, ${accessoryText}`;
   const suffix = ", ultra realistic, high quality, 8k, professional photography, perfect anatomy, no distortion, sharp focus, detailed fabric texture, realistic skin tones, depth of field, studio quality";
 
