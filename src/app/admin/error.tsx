@@ -36,16 +36,13 @@ export default function Error({
           <RefreshCw className="w-4 h-4" />
           إعادة المحاولة
         </Button>
-        <Button 
-          variant="outline"
-          asChild
-          className="gap-2 px-8 py-6 rounded-2xl text-base border-white/10 hover:bg-white/5"
+        <Link 
+          href="/admin"
+          className="flex items-center justify-center gap-2 px-8 py-6 rounded-2xl text-base font-medium border border-white/10 text-muted hover:text-white hover:bg-white/5 transition-all"
         >
-          <Link href="/admin">
-            <ChevronLeft className="w-4 h-4" />
-            العودة للرئيسية
-          </Link>
-        </Button>
+          <ChevronLeft className="w-4 h-4" />
+          العودة للرئيسية
+        </Link>
       </div>
 
       {error.digest && (
