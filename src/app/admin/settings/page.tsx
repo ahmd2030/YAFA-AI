@@ -16,7 +16,7 @@ export default function SettingsPage() {
   // Load existing settings
   useEffect(() => {
     async function fetchSettings() {
-      if (!isDbReady()) {
+      if (!isDbReady() || !db) {
         console.warn("Firebase DB not initialized yet.");
         setDbStatus("error");
         return;
@@ -51,6 +51,7 @@ export default function SettingsPage() {
 
     setSaveStatus("saving");
     try {
+      if (!db) throw new Error("Database not initialized");
       await setDoc(doc(db, "configs", "replicate"), {
         apiKey: apiKey.trim(),
         updatedAt: new Date().toISOString(),

@@ -31,6 +31,7 @@ export async function POST(req: Request) {
     let apiKey = process.env.REPLICATE_API_TOKEN; // Fallback to env if set
     
     try {
+      if (!db) throw new Error("Firestore not initialized");
       const configDoc = await getDoc(doc(db, "configs", "replicate"));
       if (configDoc.exists()) {
         const data = configDoc.data();
