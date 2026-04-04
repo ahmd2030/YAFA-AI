@@ -5,17 +5,17 @@ import { doc, getDoc } from "firebase/firestore";
 
 export const dynamic = "force-dynamic";
 
-// Model Tiers
+// Model Tiers (Prioritize Turbo for fast Vercel response)
 const MODEL_TIERS = [
-  {
-    id: "stability-ai/sdxl",
-    version: "da770e9c945441c9972070c773fe5d3a9557a3e7ef155050f2249c5825a07c39",
-    name: "High Quality (SDXL)",
-  },
   {
     id: "stability-ai/sdxl-turbo",
     version: "a562095f9c66f54c90d8137351f0f089f81df688f62fa2276569103991206d91",
     name: "Fast Performance (Turbo)",
+  },
+  {
+    id: "stability-ai/sdxl",
+    version: "da770e9c945441c9972070c773fe5d3a9557a3e7ef155050f2249c5825a07c39",
+    name: "High Quality (SDXL)",
   }
 ];
 
@@ -117,6 +117,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       imageUrl: output,
+      results: output, // Alias for frontend compatibility
       model: usedModel,
       prompt: prompt
     });

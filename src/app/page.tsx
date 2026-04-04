@@ -113,7 +113,11 @@ export default function Home() {
       }
 
       // 3. Set Results
-      setResults(data.results || []);
+      const finalResults = data.results || data.imageUrl || [];
+      if (!finalResults.length) {
+         throw new Error("API returned no images. Please check your AI quota.");
+      }
+      setResults(finalResults);
       setUsedModel(data.model || "AI Studio");
       setStep("results");
       window.scrollTo({ top: 0, behavior: "smooth" });
