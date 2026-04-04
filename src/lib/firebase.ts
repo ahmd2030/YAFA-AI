@@ -1,9 +1,8 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
+import { getAuth, Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,24 +16,31 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (Build/SSR Safe)
-let app: any;
-let db: any;
-let storage: any;
-let auth: any;
+let app: FirebaseApp | undefined;
+let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
+let auth: Auth | undefined;
 
 if (firebaseConfig.apiKey) {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  auth = getAuth(app);
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    auth = getAuth(app);
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+  }
 }
+
+// SSR Helper: Use this to check if database is available
+const isDbReady = () => !!db;
 
 // Analytics (Client Side only)
-let analytics;
+let analytics: Analytics | undefined;
 if (typeof window !== "undefined" && app) {
   isSupported().then((supported) => {
-    if (supported) analytics = getAnalytics(app);
-  });
+    if (supported && app) analytics = getAnalytics(app);
+  }).catch(err => console.error("Analytics error:", err));
 }
 
-export { app, db, storage, auth, analytics };
+export { app, db, storage, auth, analytics, isDbReady };

@@ -4,10 +4,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Save, Key, Database, RefreshCw, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { db } from "@/lib/firebase";
+import { db, isDbReady } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-
-export const dynamic = "force-dynamic";
 
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("");
@@ -18,16 +16,16 @@ export default function SettingsPage() {
   // Load existing settings
   useEffect(() => {
     async function fetchSettings() {
-      if (!db) {
-        console.error("Firebase DB not initialized. Check your environment variables.");
+      if (!isDbReady()) {
+        console.warn("Firebase DB not initialized yet.");
         setDbStatus("error");
         return;
       }
       try {
-        const docRef = doc(db, "configs", "api-keys");
+        const docRef = doc(db, "configs", "replicate");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setApiKey(docSnap.data().replicateApiKey || "");
+          setApiKey(docSnap.data().apiKey || "");
         }
         setDbStatus("connected");
       } catch (err) {
@@ -40,26 +38,32 @@ export default function SettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db) {
-      alert("Firebase is not initialized. Please add your Firebase environment variables to Vercel.");
+    if (!isDbReady()) {
+      alert("Firebase is not initialized. Please ensure NEXT_PUBLIC_FIREBASE environment variables are set in Vercel.");
       setSaveStatus("error");
       return;
     }
+
+    if (!apiKey.trim()) {
+      alert("Please enter a valid API key.");
+      return;
+    }
+
     setSaveStatus("saving");
     try {
-      await setDoc(doc(db, "configs", "api-keys"), {
-        replicateApiKey: apiKey,
+      await setDoc(doc(db, "configs", "replicate"), {
+        apiKey: apiKey.trim(),
         updatedAt: new Date().toISOString(),
-      });
+      }, { merge: true });
+      
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err: any) {
       console.error("Save error:", err);
-      // More descriptive error for common Firestore issues
       if (err.code === "permission-denied") {
-        alert("Firestore Permission Denied: Please check your Security Rules in the Firebase console.");
+        alert("Permission Denied: Ensure your Firestore Rules allow writing to 'configs/replicate'.");
       } else {
-        alert(`Error saving: ${err.message || "Unknown error"}`);
+        alert(`Error: ${err.message}`);
       }
       setSaveStatus("error");
     }
