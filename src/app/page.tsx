@@ -63,10 +63,19 @@ export default function Home() {
   };
 
   const uploadFile = async (selectedFile: File): Promise<string> => {
-    if (!storage) throw new Error("Storage not initialized");
+    if (!storage) throw new Error("Firebase Storage is not initialized.");
     const storageRef = ref(storage, `uploads/${Date.now()}_${selectedFile.name}`);
-    await uploadBytes(storageRef, selectedFile);
-    return await getDownloadURL(storageRef);
+    
+    const uploadTask = async () => {
+      await uploadBytes(storageRef, selectedFile);
+      return await getDownloadURL(storageRef);
+    };
+
+    const timeoutTask = new Promise<string>((_, reject) => 
+      setTimeout(() => reject(new Error("لم يتمكن من رفع الصورة. يرجى تفعيل (Storage) في Firebase أو إيقاف مانع الإعلانات.")), 15000)
+    );
+
+    return Promise.race([uploadTask(), timeoutTask]);
   };
 
   const handleGenerate = async () => {
@@ -86,30 +95,32 @@ export default function Home() {
           setImgUrl(currentImgUrl);
         } catch (err: any) {
           console.error("Upload error:", err);
-          throw new Error("Failed to upload image. Please check your connection.");
+          throw new Error(err.message || "فشل رفع الصورة إلى سحابة التخزين.");
         } finally {
           setIsUploading(false);
         }
       }
 
       if (!currentImgUrl) {
-        throw new Error("Please upload an image first.");
+        throw new Error("يرجى رفع صورة أولاً.");
       }
 
-      // 2. Call Generation API
-      const response = await fetch("/api/generate", {
+      // 2. Call Generation API with timeout
+      const fetchRequest = fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt,
-          image: currentImgUrl,
-        }),
+        body: JSON.stringify({ prompt, image: currentImgUrl }),
       });
 
+      const fetchTimeout = new Promise<Response>((_, reject) => 
+        setTimeout(() => reject(new Error("انتهى وقت الذكاء الاصطناعي المحدد من Vercel (60 ثانية).")), 58000)
+      );
+
+      const response = await Promise.race([fetchRequest, fetchTimeout]);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Generation failed");
+        throw new Error(data.error || data.details || "فشلت عملية التوليد من الذكاء الاصطناعي.");
       }
 
       // 3. Set Results
