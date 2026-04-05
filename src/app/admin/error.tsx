@@ -24,9 +24,12 @@ export default function Error({
       </div>
       
       <h1 className="text-3xl font-bold text-white mb-4">حدث خطأ غير متوقع</h1>
-      <p className="text-muted max-w-md mb-10 leading-relaxed">
+      <p className="text-muted max-w-md mb-2 leading-relaxed">
         تعذر تحميل هذه الصفحة حالياً. قد يكون هناك مشكلة في الاتصال أو في الإعدادات الخاصة بـ Firebase.
       </p>
+      <div className="bg-black/40 text-red-400 p-4 rounded-xl font-mono text-sm mb-10 max-w-lg overflow-auto border border-red-500/20 text-left" dir="ltr">
+        {error?.message || "Unknown error occurred"}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
         <Button 

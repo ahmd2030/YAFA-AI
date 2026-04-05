@@ -4,6 +4,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // Prevent generation timeout on Vercel
 
 // Model Tiers (Prioritize Turbo for fast Vercel response)
 const MODEL_TIERS = [
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
         const input: any = {
            prompt: prompt,
            negative_prompt: "low quality, blurry, distorted, bad anatomy, ugly, watermark, text, lowres, monochrome",
-           num_outputs: 4,
+           num_outputs: 1,
            scheduler: "K_EULER",
            guidance_scale: 7.5,
            apply_watermark: false,
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
           input.num_inference_steps = 30;
         }
 
-        const prediction = await replicate.run(model.version as any, { input });
+        const prediction = await replicate.run(`${model.id}:${model.version}` as any, { input });
         
         if (prediction && Array.isArray(prediction)) {
           output = prediction; // Already an array of 4 URLs
