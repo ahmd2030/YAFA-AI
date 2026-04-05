@@ -94,14 +94,12 @@ export async function POST(req: Request) {
         );
         
         if (prediction) {
-          if (Array.isArray(prediction)) {
-            output = prediction;
-          } else if (typeof prediction === "string") {
-            output = [prediction];
-          } else {
-            // Some models return objects with file-like structures
-            output = [String(prediction)];
-          }
+          const rawPrediction = Array.isArray(prediction) ? prediction : [prediction];
+          output = rawPrediction.map((p: any) => {
+            if (typeof p === "string") return p;
+            if (p && typeof p.url === "function") return p.url();
+            return String(p);
+          });
           usedModel = model.name;
           break;
         }
