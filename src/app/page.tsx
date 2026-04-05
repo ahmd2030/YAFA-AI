@@ -62,22 +62,54 @@ export default function Home() {
     setParams(prev => ({ ...prev, [key]: value }));
   };
 
-  const uploadFile = async (selectedFile: File): Promise<string> => {
-    if (!storage) throw new Error("Firebase Storage is not initialized.");
-    const storageRef = ref(storage, `uploads/${Date.now()}_${selectedFile.name}`);
-    
-    const uploadTask = async () => {
-      await uploadBytes(storageRef, selectedFile);
-      return await getDownloadURL(storageRef);
-    };
+  const processImageAsBase64 = async (selectedFile: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
 
-    const timeoutTask = new Promise<string>((_, reject) => 
-      setTimeout(() => reject(new Error("لم يتمكن من رفع الصورة. يرجى تفعيل (Storage) في Firebase أو إيقاف مانع الإعلانات.")), 15000)
-    );
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
 
-    return Promise.race([uploadTask(), timeoutTask]);
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("فشل في معالجة إطار الصورة."));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG to save Vercel payload size
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(dataUrl);
+        };
+        img.onerror = () => reject(new Error("الملف المرفوع ليس صورة صالحة."));
+        if (typeof event.target?.result === "string") {
+          img.src = event.target.result;
+        } else {
+          reject(new Error("فشل في قراءة الصورة."));
+        }
+      };
+      reader.onerror = () => reject(new Error("حدث خطأ أثناء قراءة الملف."));
+      reader.readAsDataURL(selectedFile);
+    });
   };
-
   const handleGenerate = async () => {
     try {
       setError(null);
@@ -87,15 +119,15 @@ export default function Home() {
 
       let currentImgUrl = imgUrl;
 
-      // 1. Upload if needed
+      // 1. Process image locally into base64
       if (file && !currentImgUrl) {
         setIsUploading(true);
         try {
-          currentImgUrl = await uploadFile(file);
+          currentImgUrl = await processImageAsBase64(file);
           setImgUrl(currentImgUrl);
         } catch (err: any) {
-          console.error("Upload error:", err);
-          throw new Error(err.message || "فشل رفع الصورة إلى سحابة التخزين.");
+          console.error("Local processing error:", err);
+          throw new Error(err.message || "فشل معالجة الصورة محلياً.");
         } finally {
           setIsUploading(false);
         }
