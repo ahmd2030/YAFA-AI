@@ -32,7 +32,7 @@ export function LoadingScreen() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center min-h-[400px]">
+    <div className="flex flex-col items-center justify-center p-12 text-center min-h-[400px] notranslate" translate="no">
       <div className="relative mb-12">
         {/* Animated Orbs */}
         <motion.div 

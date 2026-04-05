@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Yafa AI | Professional Clothing Ads in Seconds",
-  description: "Transform your clothing images into professional advertising photos with AI-generated models and backgrounds.",
+  title: "يافا للذكاء الاصطناعي | إعلانات ملابس احترافية في ثوانٍ",
+  description: "حول صور ملابسك إلى صور دعائية احترافية باستخدام عارضي أزياء وخلفيات من إنشاء الذكاء الاصطناعي.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased dark`}>
+    <html lang="ar" dir="rtl" className={`${inter.variable} h-full antialiased dark`}>
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body className="min-h-full font-sans selection:bg-primary selection:text-white">
         {children}
       </body>
