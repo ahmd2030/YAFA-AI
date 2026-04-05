@@ -54,17 +54,24 @@ export default function SettingsPage() {
     setSaveStatus("saving");
     try {
       if (!db) throw new Error("Database not initialized");
-      await setDoc(doc(db, "configs", "replicate"), {
+      
+      const savePromise = setDoc(doc(db, "configs", "replicate"), {
         apiKey: apiKey.trim(),
         updatedAt: new Date().toISOString(),
       }, { merge: true });
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout: لم تتم الاستجابة من السيرفر. قد يكون هناك حظر من إضافات المتصفح أو مشكلة في صلاحيات Firestore.")), 10000)
+      );
+
+      await Promise.race([savePromise, timeoutPromise]);
       
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err: any) {
       console.error("Save error:", err);
-      if (err.code === "permission-denied") {
-        alert("Permission Denied: Ensure your Firestore Rules allow writing to 'configs/replicate'.");
+      if (err.code === "permission-denied" || err.message?.includes("Missing or insufficient permissions")) {
+        alert("الرجاء تحديث قواعد Firestore (Rules) للسماح بالكتابة: allow read, write: if true;");
       } else {
         alert(`Error: ${err.message}`);
       }
