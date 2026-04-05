@@ -6,17 +6,16 @@ import { doc, getDoc } from "firebase/firestore";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Prevent generation timeout on Vercel
 
-// Model Tiers (Prioritize Turbo for fast Vercel response)
+// Model Tiers (Optimized for speed and quality)
 const MODEL_TIERS = [
+  {
+    id: "black-forest-labs/flux-schnell",
+    name: "FLUX Schnell (Elite Performance)",
+  },
   {
     id: "stability-ai/sdxl-turbo",
     version: "a562095f9c66f54c90d8137351f0f089f81df688f62fa2276569103991206d91",
-    name: "Fast Performance (Turbo)",
-  },
-  {
-    id: "stability-ai/sdxl",
-    version: "da770e9c945441c9972070c773fe5d3a9557a3e7ef155050f2249c5825a07c39",
-    name: "High Quality (SDXL)",
+    name: "SDXL Turbo (Fallback)",
   }
 ];
 
@@ -29,20 +28,17 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch API Key from Firestore
-    let apiKey = process.env.REPLICATE_API_TOKEN; // Fallback to env if set
+    let apiKey = process.env.REPLICATE_API_TOKEN;
     
     try {
       if (!db) throw new Error("Firestore not initialized");
       const configDoc = await getDoc(doc(db, "configs", "replicate"));
       if (configDoc.exists()) {
         const data = configDoc.data();
-        if (data.apiKey) {
-          apiKey = data.apiKey;
-        }
+        if (data.apiKey) apiKey = data.apiKey;
       }
     } catch (firebaseError) {
-      console.error("Error fetching config from Firestore:", firebaseError);
-      // Continue with env var if available
+      console.error("Firestore config error:", firebaseError);
     }
 
     if (!apiKey) {
@@ -52,9 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const replicate = new Replicate({
-      auth: apiKey,
-    });
+    const replicate = new Replicate({ auth: apiKey });
 
     let lastError = null;
     let output = null;
@@ -65,43 +59,55 @@ export async function POST(req: Request) {
       try {
         console.log(`Attempting generation with: ${model.name}`);
         
-        // Prepare input
-        const input: any = {
-           prompt: prompt,
-           negative_prompt: "low quality, blurry, distorted, bad anatomy, ugly, watermark, text, lowres, monochrome",
-           num_outputs: 1,
-           scheduler: "K_EULER",
-           guidance_scale: 7.5,
-           apply_watermark: false,
-        };
+        let input: any = {};
 
-        if (image) {
-          input.image = image;
-          input.prompt_strength = 0.8;
-        }
-
-        if (model.id.includes("turbo")) {
-          input.num_inference_steps = 1;
-          input.guidance_scale = 0;
+        // Configuration based on model type
+        if (model.id.includes("flux")) {
+          // FLUX Schnell Parameters
+          input = {
+            prompt: prompt,
+            num_outputs: 1,
+            aspect_ratio: "1:1",
+            output_format: "webp",
+            output_quality: 90,
+          };
         } else {
-          input.num_inference_steps = 30;
+          // SDXL Turbo / Fallback Parameters
+          input = {
+            prompt: prompt,
+            negative_prompt: "low quality, blurry, distorted, bad anatomy, ugly, watermark, text",
+            num_outputs: 1,
+            scheduler: "K_EULER",
+            guidance_scale: model.id.includes("turbo") ? 0 : 7.5,
+            num_inference_steps: model.id.includes("turbo") ? 1 : 25,
+          };
+          if (image) {
+            input.image = image;
+            input.prompt_strength = 0.8;
+          }
         }
 
-        const prediction = await replicate.run(`${model.id}:${model.version}` as any, { input });
+        // Run prediction
+        const prediction = await replicate.run(
+          (model.id.includes("flux") ? model.id : `${model.id}:${model.version}`) as any,
+          { input }
+        );
         
-        if (prediction && Array.isArray(prediction)) {
-          output = prediction; // Already an array of 4 URLs
-          usedModel = model.name;
-          break;
-        } else if (typeof prediction === "string") {
-          output = [prediction];
+        if (prediction) {
+          if (Array.isArray(prediction)) {
+            output = prediction;
+          } else if (typeof prediction === "string") {
+            output = [prediction];
+          } else {
+            // Some models return objects with file-like structures
+            output = [String(prediction)];
+          }
           usedModel = model.name;
           break;
         }
       } catch (err: any) {
         lastError = err;
         console.error(`Generation failed for ${model.name}:`, err.message);
-        // Continue to fallback
       }
     }
 
