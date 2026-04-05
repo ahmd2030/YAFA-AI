@@ -6,16 +6,17 @@ import { doc, getDoc } from "firebase/firestore";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Prevent generation timeout on Vercel
 
-// Model Tiers (Optimized for speed and quality)
+// Model Tiers (Optimized for Image-to-Image Fashion)
 const MODEL_TIERS = [
   {
-    id: "black-forest-labs/flux-schnell",
-    name: "FLUX Schnell (Elite Performance)",
+    id: "stability-ai/sdxl",
+    version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+    name: "Fashion Engine (SDXL HQ Vision)",
   },
   {
     id: "stability-ai/sdxl-turbo",
     version: "a562095f9c66f54c90d8137351f0f089f81df688f62fa2276569103991206d91",
-    name: "SDXL Turbo (Fallback)",
+    name: "Fast Fashion (Turbo Vision)",
   }
 ];
 
