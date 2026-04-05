@@ -12,9 +12,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [dbStatus, setDbStatus] = useState<"connecting" | "connected" | "error">("connecting");
+  const [mounted, setMounted] = useState(false);
 
   // Load existing settings
   useEffect(() => {
+    setMounted(true);
     async function fetchSettings() {
       if (!isDbReady() || !db) {
         console.warn("Firebase DB not initialized yet.");
@@ -69,6 +71,7 @@ export default function SettingsPage() {
       setSaveStatus("error");
     }
   };
+  if (!mounted) return null;
 
   return (
     <div className="space-y-10">
@@ -151,7 +154,7 @@ export default function SettingsPage() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {saveStatus === "saving" ? "Saving..." : saveStatus === "success" ? "Saved!" : "Save Changes"}
+              <span>{saveStatus === "saving" ? "Saving..." : saveStatus === "success" ? "Saved!" : "Save Changes"}</span>
             </Button>
 
             {saveStatus === "error" && (

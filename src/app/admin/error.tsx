@@ -28,7 +28,7 @@ export default function Error({
         تعذر تحميل هذه الصفحة حالياً. قد يكون هناك مشكلة في الاتصال أو في الإعدادات الخاصة بـ Firebase.
       </p>
       <div className="bg-black/40 text-red-400 p-4 rounded-xl font-mono text-sm mb-10 max-w-lg overflow-auto border border-red-500/20 text-left" dir="ltr">
-        {error?.message || "Unknown error occurred"}
+        <span>{error?.message || "Unknown error occurred"}</span>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
