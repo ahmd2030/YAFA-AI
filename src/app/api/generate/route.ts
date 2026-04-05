@@ -73,18 +73,18 @@ export async function POST(req: Request) {
             output_quality: 90,
           };
         } else {
-          // SDXL Turbo / Fallback Parameters
+          // SDXL Original / Fallback Parameters
           input = {
             prompt: prompt,
             negative_prompt: "low quality, blurry, distorted, bad anatomy, ugly, watermark, text",
             num_outputs: 1,
             scheduler: "K_EULER",
-            guidance_scale: model.id.includes("turbo") ? 0 : 7.5,
-            num_inference_steps: model.id.includes("turbo") ? 1 : 25,
+            guidance_scale: model.id.includes("turbo") ? 0 : 6.0,
+            num_inference_steps: model.id.includes("turbo") ? 1 : 35,
           };
           if (image) {
             input.image = image;
-            input.prompt_strength = 0.8;
+            input.prompt_strength = 0.45; // Critical: Low strength keeps the original graphics/text intact
           }
         }
 
