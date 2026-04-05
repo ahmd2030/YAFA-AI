@@ -99,7 +99,7 @@ export default function SettingsPage() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/5 mx-4">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/5">
           {dbStatus === "connecting" && (
             <>
               <RefreshCw className="w-3 h-3 text-yellow-500 animate-spin" />
@@ -118,13 +118,6 @@ export default function SettingsPage() {
               <span className="text-xs text-red-500 font-medium">Connect Failed</span>
             </>
           )}
-        </div>
-
-        <div className="text-[10px] text-muted flex flex-col items-start bg-black/20 p-2 rounded-lg border border-white/5">
-          <span className="font-mono text-primary">Project ID:</span> 
-          <span>{process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "MISSING!"}</span>
-          <span className="font-mono text-primary mt-1">API Key Ends With:</span>
-          <span>{process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.slice(-4) || "MISSING!"}</span>
         </div>
       </section>
 
