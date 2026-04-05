@@ -5,10 +5,10 @@ import { useState, useEffect } from "react";
 import { Sparkles, Loader2, Wand2, Lightbulb, Image } from "lucide-react";
 
 const messages = [
-  { text: "Analyzing your product...", icon: <Sparkles className="w-5 h-5 text-primary" /> },
-  { text: "Generating model...", icon: <Wand2 className="w-5 h-5 text-purple-400" /> },
-  { text: "Enhancing lighting...", icon: <Lightbulb className="w-5 h-5 text-yellow-300" /> },
-  { text: "Finalizing image...", icon: <Image className="w-5 h-5 text-blue-400" /> },
+  { text: "جاري تحليل المنتج الخاص بك...", icon: <Sparkles className="w-5 h-5 text-primary" /> },
+  { text: "جاري إنشاء العارض (Model)...", icon: <Wand2 className="w-5 h-5 text-purple-400" /> },
+  { text: "تحسين الإضاءة والتفاصيل...", icon: <Lightbulb className="w-5 h-5 text-yellow-300" /> },
+  { text: "إتمام الصورة النهائية...", icon: <Image className="w-5 h-5 text-blue-400" /> },
 ];
 
 export function LoadingScreen() {
@@ -16,13 +16,14 @@ export function LoadingScreen() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    // Artificial progress to show life
     const timer = setInterval(() => {
-      setProgress((v) => (v < 100 ? v + 1 : 100));
-    }, 50);
+      setProgress((v) => (v < 98 ? v + 1 : 98));
+    }, 150);
     
     const msgTimer = setInterval(() => {
       setCurrentIdx((idx) => (idx + 1) % messages.length);
-    }, 1500);
+    }, 2500);
 
     return () => {
       clearInterval(timer);
@@ -85,7 +86,7 @@ export function LoadingScreen() {
         </div>
         
         <p className="mt-8 text-sm text-muted animate-pulse">
-            AI is creating your masterpiece. This usually takes 5-10 seconds.
+            يقوم الذكاء الاصطناعي بإنشاء تحفتك الفنية الآن. يستغرق هذا عادة من 5 إلى 15 ثانية.
         </p>
       </div>
     </div>
